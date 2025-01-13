@@ -49,6 +49,8 @@ public class PaletteView extends View {
 
     private Mode mMode = Mode.DRAW;
 
+    private Paint mEraserCirclePaint; // 用于绘制红色圆圈的Paint对象
+    private float mEraserCircleRadius; // 红色圆圈的半径
 
     public PaletteView(Context context) {
         super(context);
@@ -87,6 +89,13 @@ public class PaletteView extends View {
         mXferModeDraw = new PorterDuffXfermode(PorterDuff.Mode.SRC);
         mXferModeClear = new PorterDuffXfermode(PorterDuff.Mode.CLEAR);
         mPaint.setXfermode(mXferModeDraw);
+
+        // 初始化红色圆圈的Paint对象
+        mEraserCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mEraserCirclePaint.setColor(Color.RED);
+        mEraserCirclePaint.setStyle(Paint.Style.STROKE);
+        mEraserCirclePaint.setStrokeWidth(DimenUtils.dp2px(2)); // 红色圆圈的边框宽度
+        mEraserCircleRadius = mEraserSize / 2f; // 红色圆圈的半径为橡皮擦大小的一半
     }
 
     private void initBuffer(){
@@ -128,6 +137,10 @@ public class PaletteView extends View {
 
     public void setEraserSize(int size) {
         mEraserSize = size;
+        mEraserCircleRadius = size / 2f; // 更新红色圆圈的半径
+        if (mMode == Mode.ERASER) {
+            mPaint.setStrokeWidth(mEraserSize);
+        }
     }
 
     public void setPenRawSize(int size) {
@@ -261,12 +274,16 @@ public class PaletteView extends View {
         if (mBufferBitmap != null) {
             canvas.drawBitmap(mBufferBitmap, 0, 0, null);
         }
+        if (mMode == Mode.ERASER && !Float.isNaN(mLastX) && !Float.isNaN(mLastY)) {
+            // 绘制红色圆圈
+            canvas.drawCircle(mLastX, mLastY, mEraserCircleRadius, mEraserCirclePaint);
+        }
     }
 
     @SuppressWarnings("all")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(!isEnabled()){
+        if (!isEnabled()) {
             return false;
         }
         final int action = event.getAction() & MotionEvent.ACTION_MASK;
@@ -279,10 +296,9 @@ public class PaletteView extends View {
                 if (mPath == null) {
                     mPath = new Path();
                 }
-                mPath.moveTo(x,y);
+                mPath.moveTo(x, y);
                 break;
             case MotionEvent.ACTION_MOVE:
-                //这里终点设为两点的中心点的目的在于使绘制的曲线更平滑，如果终点直接设置为x,y，效果和lineto是一样的,实际是折线效果
                 mPath.quadTo(mLastX, mLastY, (x + mLastX) / 2, (y + mLastY) / 2);
                 if (mBufferBitmap == null) {
                     initBuffer();
@@ -290,7 +306,7 @@ public class PaletteView extends View {
                 if (mMode == Mode.ERASER && !mCanEraser) {
                     break;
                 }
-                mBufferCanvas.drawPath(mPath,mPaint);
+                mBufferCanvas.drawPath(mPath, mPaint);
                 invalidate();
                 mLastX = x;
                 mLastY = y;
@@ -300,8 +316,29 @@ public class PaletteView extends View {
                     saveDrawingPath();
                 }
                 mPath.reset();
+                mLastX = Float.NaN; // 设置为无效值
+                mLastY = Float.NaN; // 设置为无效值
                 break;
         }
         return true;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (w != oldw || h != oldh) {
+            mBufferBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            mBufferCanvas = new Canvas(mBufferBitmap);
+            mBufferCanvas.drawColor(Color.TRANSPARENT);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (mBufferBitmap != null) {
+            mBufferBitmap.recycle();
+            mBufferBitmap = null;
+        }
     }
 }
