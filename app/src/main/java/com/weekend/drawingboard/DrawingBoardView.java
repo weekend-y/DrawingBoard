@@ -18,7 +18,7 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PaletteView extends View {
+public class DrawingBoardView extends View {
 
     private Paint mPaint;
     private Path mPath;
@@ -52,17 +52,17 @@ public class PaletteView extends View {
     private Paint mEraserCirclePaint; // 用于绘制红色圆圈的Paint对象
     private float mEraserCircleRadius; // 红色圆圈的半径
 
-    public PaletteView(Context context) {
+    public DrawingBoardView(Context context) {
         super(context);
         init();
     }
 
-    public PaletteView(Context context, @Nullable AttributeSet attrs) {
+    public DrawingBoardView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public PaletteView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public DrawingBoardView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

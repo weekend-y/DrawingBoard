@@ -20,20 +20,20 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 class MainActivity : AppCompatActivity(), View.OnClickListener,
-    PaletteView.Callback, Handler.Callback {
+    DrawingBoardView.Callback, Handler.Callback {
     private var mUndoView: View? = null
     private var mRedoView: View? = null
     private var mPenView: View? = null
     private var mEraserView: View? = null
     private var mClearView: View? = null
-    private var mPaletteView: PaletteView? = null
+    private var mDrawingBoardView: DrawingBoardView? = null
     private var mSaveProgressDlg: ProgressDialog? = null
     private var mHandler: Handler? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mPaletteView = findViewById<View>(R.id.palette) as PaletteView
-        mPaletteView!!.setCallback(this)
+        mDrawingBoardView = findViewById<View>(R.id.palette) as DrawingBoardView
+        mDrawingBoardView!!.setCallback(this)
         mUndoView = findViewById(R.id.undo)
         mRedoView = findViewById(R.id.redo)
         mPenView = findViewById(R.id.pen)
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
                 }
                 mSaveProgressDlg!!.show()
                 Thread {
-                    val bm = mPaletteView!!.buildBitmap()
+                    val bm = mDrawingBoardView!!.buildBitmap()
                     val savedFile = saveImage(bm, 100)
                     if (savedFile != null) {
                         scanFile(this@MainActivity, savedFile)
@@ -106,25 +106,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
     }
 
     override fun onUndoRedoStatusChanged() {
-        mUndoView!!.isEnabled = mPaletteView!!.canUndo()
-        mRedoView!!.isEnabled = mPaletteView!!.canRedo()
+        mUndoView!!.isEnabled = mDrawingBoardView!!.canUndo()
+        mRedoView!!.isEnabled = mDrawingBoardView!!.canRedo()
     }
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.undo -> mPaletteView!!.undo()
-            R.id.redo -> mPaletteView!!.redo()
+            R.id.undo -> mDrawingBoardView!!.undo()
+            R.id.redo -> mDrawingBoardView!!.redo()
             R.id.pen -> {
                 v.isSelected = true
                 mEraserView!!.isSelected = false
-                mPaletteView!!.mode = PaletteView.Mode.DRAW
+                mDrawingBoardView!!.mode = DrawingBoardView.Mode.DRAW
             }
             R.id.eraser -> {
                 v.isSelected = true
                 mPenView!!.isSelected = false
-                mPaletteView!!.mode = PaletteView.Mode.ERASER
+                mDrawingBoardView!!.mode = DrawingBoardView.Mode.ERASER
             }
-            R.id.clear -> mPaletteView!!.clear()
+            R.id.clear -> mDrawingBoardView!!.clear()
         }
     }
 
